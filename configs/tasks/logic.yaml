@@ -1,0 +1,10 @@
+task:
+  name: logic
+  source: reasoning_gym
+  rg_name: knights_knaves    # alternative: propositional_logic
+  rg_config:
+    n_people: 2
+    depth_constraint: 2
+    width_constraint: 2
+  n_train: 2000
+  n_test: 200

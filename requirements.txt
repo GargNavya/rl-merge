@@ -1,0 +1,15 @@
+# Tested together (Oct 2026). Install PyTorch with CUDA first from pytorch.org, then:
+#   pip install -U setuptools wheel      (reasoning-gym needs this to build)
+#   pip install -r requirements.txt
+torch>=2.4
+transformers==5.18.0
+trl==1.14.1
+peft==0.21.1
+accelerate==1.15.0
+datasets==5.0.1
+huggingface_hub==1.33.0
+safetensors==0.8.0
+reasoning-gym==0.1.25
+pyyaml==6.0.3
+numpy
+pytest

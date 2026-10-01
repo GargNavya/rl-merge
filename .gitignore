@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+wandb/
+
+data/*
+!data/.gitkeep
+checkpoints/*
+!checkpoints/.gitkeep
+results/generations/

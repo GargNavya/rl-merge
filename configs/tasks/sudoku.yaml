@@ -1,0 +1,9 @@
+task:
+  name: sudoku
+  source: reasoning_gym
+  rg_name: mini_sudoku       # alternative: shortest_path
+  rg_config:                 # easy: base 0.5B scored 0.5% at 4-8 blanks
+    min_empty: 2
+    max_empty: 4
+  n_train: 2000
+  n_test: 200

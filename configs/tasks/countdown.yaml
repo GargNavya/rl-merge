@@ -1,0 +1,14 @@
+task:
+  name: countdown
+  source: reasoning_gym
+  rg_name: countdown
+  rg_config:                 # easy: base 0.5B scored 1% at 3-4 numbers with * and /
+    min_numbers: 3
+    max_numbers: 3
+    min_value: 1
+    max_value: 20
+    min_target: 5
+    max_target: 40
+    operators: ["+", "-"]
+  n_train: 2000
+  n_test: 200

@@ -1,0 +1,41 @@
+# Shared settings for every specialist. Task files override only what they must.
+seed: 42
+
+model:
+  name: Qwen/Qwen2.5-0.5B-Instruct
+  dtype: auto            # auto = bf16 if GPU supports it, else fp16 (fp32 on CPU)
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+reward:
+  format_weight: 0.1     # small bonus for using <think>/<answer> tags; correctness weight is 1.0
+
+# Passed straight into trl.GRPOConfig. Any GRPOConfig field can go here.
+grpo:
+  learning_rate: 2.0e-5
+  lr_scheduler_type: constant_with_warmup
+  warmup_steps: 10
+  max_steps: 200
+  num_generations: 8                 # answers sampled per question
+  per_device_train_batch_size: 2     # lower to 1 on OOM
+  gradient_accumulation_steps: 16    # 2 x 16 = 32 answers = 4 questions per update
+  max_completion_length: 384
+  temperature: 1.0
+  beta: 0.0                          # KL pull toward base; doc ablates this later
+  max_grad_norm: 1.0
+  gradient_checkpointing: true
+  gradient_checkpointing_kwargs: {use_reentrant: false}
+  logging_steps: 5
+  save_steps: 100
+  save_total_limit: 2
+  report_to: none                    # set to wandb to get live reward curves
+  log_completions: false
+
+eval:
+  n_test: 200
+  batch_size: 16
+  max_new_tokens: 384
