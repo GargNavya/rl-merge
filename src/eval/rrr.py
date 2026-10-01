@@ -10,6 +10,7 @@ Example:
 """
 import argparse
 import csv
+from pathlib import Path
 
 from src.utils.config import ROOT, TASKS
 
@@ -22,6 +23,21 @@ def latest_scores(path):
         for r in csv.DictReader(f):
             table[(r["label"], r["task"])] = float(r["accuracy"])  # later rows overwrite earlier
     return table
+
+
+def compute_rrr(s: dict, label: str, tasks: list[str]):
+    """s maps (label, task) -> accuracy. Returns (per-task RRR or None, macro, worst)."""
+    vals = []
+    for t in tasks:
+        gain = s[(f"spec-{t}", t)] - s[("base", t)]
+        if (label, t) not in s or gain < MIN_GAIN:
+            vals.append(None)
+            continue
+        vals.append((s[(label, t)] - s[("base", t)]) / gain)
+    ok = [v for v in vals if v is not None]
+    macro = sum(ok) / len(ok) if ok else float("nan")
+    worst = min(ok) if ok else float("nan")
+    return vals, macro, worst
 
 
 def main():
@@ -49,16 +65,7 @@ def main():
     print("\nRRR per task")
     print(f"{'':<24}" + "".join(f"{t:>11}" for t in tasks) + f"{'macro':>9}{'worst':>9}")
     for lab in a.merged:
-        vals = []
-        for t in tasks:
-            gain = s[(f"spec-{t}", t)] - s[("base", t)]
-            if (lab, t) not in s or gain < MIN_GAIN:
-                vals.append(None)
-                continue
-            vals.append((s[(lab, t)] - s[("base", t)]) / gain)
-        ok = [v for v in vals if v is not None]
-        macro = sum(ok) / len(ok) if ok else float("nan")
-        worst = min(ok) if ok else float("nan")
+        vals, macro, worst = compute_rrr(s, lab, tasks)
         print(f"{lab:<24}" + "".join(f"{v:11.2f}" if v is not None else f"{'n/a':>11}" for v in vals)
               + f"{macro:9.2f}{worst:9.2f}")
         out_rows.append({"label": lab, **{t: v for t, v in zip(tasks, vals)},
@@ -68,7 +75,7 @@ def main():
     if low:
         print(f"\n[rrr] n/a = specialist gained < {MIN_GAIN} on: {low}. Train longer or adjust difficulty.")
 
-    path = ROOT / "results" / "rrr.csv"
+    path = Path(a.scores).parent / "rrr.csv"
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["label", *tasks, "macro_rrr", "worst_rrr"])
         w.writeheader()

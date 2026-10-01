@@ -38,7 +38,8 @@ def _mbpp(cfg):
 
     def conv(ex, split, i):
         q = f"{ex['text']}\nYour code should pass this test:\n{ex['test_list'][0]}{CODE_SUFFIX}"
-        meta = {"tests": ex["test_list"], "setup": ex.get("test_setup_code", "") or ""}
+        meta = {"tests": ex["test_list"], "setup": ex.get("test_setup_code", "") or "",
+                "solution": ex["code"]}  # reference code, only used by verify.py
         return _row("code", split, i, q, "", meta)
 
     train = [conv(ex, "train", i) for i, ex in
@@ -54,10 +55,19 @@ def _reasoning_gym(cfg):
     train_ds = rg.create_dataset(name, size=cfg["n_train"], seed=SPLIT_SEED, **rcfg)
     # RG seeds item i with (seed + i), so test seed must be far away or items repeat.
     test_ds = rg.create_dataset(name, size=cfg["n_test"] * 2, seed=SPLIT_SEED + 10_000_000, **rcfg)
-    train = [_row(task, "train", i, e["question"], e["answer"], e) for i, e in enumerate(train_ds)]
+    cut, suffix = cfg.get("prompt_cut"), cfg.get("prompt_suffix", "")
+
+    def question(e):
+        # Replace RG's own answer instructions (e.g. "no other text") which stop the model reasoning
+        q = e["question"]
+        if cut and cut in q:
+            q = q[:q.index(cut)].rstrip() + "\n\n" + suffix.strip()
+        return q
+
+    train = [_row(task, "train", i, question(e), e["answer"], e) for i, e in enumerate(train_ds)]
     seen = {r["question"] for r in train}
-    test = [_row(task, "test", i, e["question"], e["answer"], e)
-            for i, e in enumerate(test_ds) if e["question"] not in seen]
+    test = [_row(task, "test", i, question(e), e["answer"], e)
+            for i, e in enumerate(test_ds) if question(e) not in seen]
     return {"train": train, "test": test}
 
 
