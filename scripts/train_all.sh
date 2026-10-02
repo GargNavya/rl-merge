@@ -5,7 +5,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 SEED=${SEED:-42}
-TASKS=${TASKS:-"gsm8k countdown logic sudoku code"}
+# TASKS=${TASKS:-"gsm8k countdown logic sudoku code"}
+TASKS=${TASKS:-"gsm8k logic code"}
 
 for t in $TASKS; do
   python -m src.train.grpo --task "$t" --seed "$SEED"

@@ -5,7 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 BASE=${BASE:-Qwen/Qwen2.5-0.5B-Instruct}
 SEED=${SEED:-42}
-TASKS=${TASKS:-"gsm8k countdown logic sudoku code"}
+# TASKS=${TASKS:-"gsm8k countdown logic sudoku code"}
+TASKS=${TASKS:-"gsm8k logic code"}
 METHODS=${METHODS:-"avg task_arithmetic ties"}
 LAM=${LAM:-1.0}
 DENSITY=${DENSITY:-0.2}
