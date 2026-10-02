@@ -21,8 +21,8 @@ grpo:
   warmup_steps: 10
   max_steps: 200
   num_generations: 8                 # answers sampled per question
-  per_device_train_batch_size: 4     # lower to 1 on OOM
-  gradient_accumulation_steps: 8    # 2 x 16 = 32 answers = 4 questions per update
+  per_device_train_batch_size: 2     # lower to 1 on OOM
+  gradient_accumulation_steps: 16    # 2 x 16 = 32 answers = 4 questions per update
   max_completion_length: 512
   temperature: 1.0
   beta: 0.0                          # KL pull toward base; doc ablates this later
