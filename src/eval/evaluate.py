@@ -35,11 +35,12 @@ def generate(model, tok, questions, batch_size, max_new_tokens):
     return outs
 
 
-def evaluate(model_path, label, tasks, seed=0, overrides=()):
+def evaluate(model_path, label, tasks, seed=0, overrides=(), results="results"):
+    res = ROOT / results
     set_seed(seed)
     tok = load_tokenizer(model_path)
     model = load_model(model_path, load_config(overrides=overrides)["model"]["dtype"]).eval()
-    results = {}
+    accs = {}
     for task in tasks:
         cfg = load_config(task=task, overrides=overrides)
         rows = load_split(task, "test", cfg["eval"]["n_test"])
@@ -51,7 +52,7 @@ def evaluate(model_path, label, tasks, seed=0, overrides=()):
         fmt = sum(format_ok(c) for c in comps) / len(comps)
         mean_len = sum(len(tok(c)["input_ids"]) for c in comps) / len(comps)
 
-        gen_path = ROOT / "results" / "generations" / label / f"{task}.jsonl"
+        gen_path = res / "generations" / label / f"{task}.jsonl"
         gen_path.parent.mkdir(parents=True, exist_ok=True)
         with open(gen_path, "w") as f:
             for r, c, s in zip(rows, comps, scores):
@@ -60,10 +61,11 @@ def evaluate(model_path, label, tasks, seed=0, overrides=()):
 
         append_score({"time": now(), "label": label, "model": str(model_path), "task": task,
                       "n": len(rows), "accuracy": round(acc, 4), "format_rate": round(fmt, 4),
-                      "mean_len": round(mean_len, 1), "seed": seed, "git_commit": git_commit()})
-        results[task] = acc
+                      "mean_len": round(mean_len, 1), "seed": seed, "git_commit": git_commit()},
+                     res / "scores.csv")
+        accs[task] = acc
         print(f"[eval] {label:<24} {task:<10} acc={acc:.3f} format={fmt:.2f} len={mean_len:.0f}")
-    return results
+    return accs
 
 
 def main():
@@ -73,8 +75,9 @@ def main():
     p.add_argument("--tasks", nargs="+", default=TASKS)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--set", nargs="*", default=[], help="overrides like eval.n_test=50")
+    p.add_argument("--results", default="results", help="folder for scores.csv + generations")
     a = p.parse_args()
-    evaluate(a.model, a.label, a.tasks, a.seed, a.set)
+    evaluate(a.model, a.label, a.tasks, a.seed, a.set, a.results)
 
 
 if __name__ == "__main__":

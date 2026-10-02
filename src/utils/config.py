@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-TASKS = ["gsm8k", "logic", "code"]
+TASKS = ["gsm8k", "logic", "code"]  # countdown, sudoku: base model near 0%, skipped for now
 
 
 def deep_merge(a: dict, b: dict) -> dict:

@@ -78,6 +78,19 @@ def merge_tensor(base, specs, method, lam, density):
     return (base.float() + delta).to(base.dtype)
 
 
+def merge_models(base_path, spec_paths, method, lam=1.0, density=0.2):
+    """Returns (merged state dict, number of tensors that differ from base)."""
+    base = LazyWeights(base_path)
+    specs = [LazyWeights(s) for s in spec_paths]
+    merged, changed = {}, 0
+    for key in base.keys():
+        b = base.get(key)
+        m = merge_tensor(b, [s.get(key) for s in specs], method, lam, density)
+        changed += int(m is not b)
+        merged[key] = m.contiguous()
+    return merged, changed
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--base", default="Qwen/Qwen2.5-0.5B-Instruct")
@@ -88,17 +101,9 @@ def main():
     p.add_argument("--out", required=True)
     a = p.parse_args()
 
-    base = LazyWeights(a.base)
-    specs = [LazyWeights(s) for s in a.specialists]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-
-    merged, changed = {}, 0
-    for key in base.keys():
-        b = base.get(key)
-        m = merge_tensor(b, [s.get(key) for s in specs], a.method, a.lam, a.density)
-        changed += int(m is not b)
-        merged[key] = m.contiguous()
+    merged, changed = merge_models(a.base, a.specialists, a.method, a.lam, a.density)
     save_file(merged, out / "model.safetensors", metadata={"format": "pt"})
 
     src = Path(a.specialists[0])
@@ -109,7 +114,7 @@ def main():
     write_json({"method": a.method, "lam": a.lam, "density": a.density, "base": a.base,
                 "specialists": a.specialists, "tensors_changed": changed,
                 "git_commit": git_commit(), "time": now()}, out / "merge_info.json")
-    print(f"[merge] {a.method}: {len(specs)} models, {changed} tensors changed -> {out}")
+    print(f"[merge] {a.method}: {len(a.specialists)} models, {changed} tensors changed -> {out}")
 
 
 if __name__ == "__main__":
