@@ -9,3 +9,4 @@ data/*
 checkpoints/*
 !checkpoints/.gitkeep
 results/generations/
+*.zip

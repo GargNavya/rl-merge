@@ -11,3 +11,12 @@ time,label,model,task,n,accuracy,format_rate,mean_len,seed,git_commit
 2026-10-03T01:46:28,spec-code,checkpoints/specialists/code/seed42/merged,gsm8k,200,0.045,1.0,11.2,0,ef1059a-dirty
 2026-10-03T01:49:05,spec-code,checkpoints/specialists/code/seed42/merged,logic,200,0.18,0.85,215.1,0,ef1059a-dirty
 2026-10-03T01:50:22,spec-code,checkpoints/specialists/code/seed42/merged,code,200,0.325,1.0,94.3,0,ef1059a-dirty
+2026-10-03T15:08:53,merge-avg,checkpoints/merged/avg,gsm8k,200,0.44,0.425,259.5,0,9664e81
+2026-10-03T15:10:45,merge-avg,checkpoints/merged/avg,logic,200,0.225,0.975,238.9,0,9664e81-dirty
+2026-10-03T15:11:58,merge-avg,checkpoints/merged/avg,code,200,0.275,1.0,98.2,0,9664e81-dirty
+2026-10-03T15:14:16,merge-task_arithmetic,checkpoints/merged/task_arithmetic,gsm8k,200,0.415,0.985,216.0,0,9664e81-dirty
+2026-10-03T15:15:30,merge-task_arithmetic,checkpoints/merged/task_arithmetic,logic,200,0.33,0.995,158.6,0,9664e81-dirty
+2026-10-03T15:17:15,merge-task_arithmetic,checkpoints/merged/task_arithmetic,code,200,0.305,0.995,93.9,0,9664e81-dirty
+2026-10-03T15:19:59,merge-ties,checkpoints/merged/ties,gsm8k,200,0.41,0.965,234.1,0,9664e81-dirty
+2026-10-03T15:21:26,merge-ties,checkpoints/merged/ties,logic,200,0.385,0.98,193.7,0,9664e81-dirty
+2026-10-03T15:22:44,merge-ties,checkpoints/merged/ties,code,200,0.34,1.0,93.0,0,9664e81-dirty
