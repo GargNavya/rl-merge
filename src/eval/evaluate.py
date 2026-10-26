@@ -1,7 +1,7 @@
 """Score one model on one or more tasks. Same code and same questions for every model.
 
 Example:
-  python -m src.eval.evaluate --model Qwen/Qwen2.5-0.5B-Instruct --label base
+  python -m src.eval.evaluate --model Qwen/Qwen2.5-1.5B-Instruct --label base
   python -m src.eval.evaluate --model checkpoints/specialists/gsm8k/seed42/merged --label spec-gsm8k
 """
 import argparse
@@ -17,6 +17,11 @@ from src.utils.config import ROOT, TASKS, load_config
 from src.utils.model import load_model, load_tokenizer
 from src.utils.seed import set_seed
 from src.utils.tracking import append_score, git_commit, now
+
+
+def eval_dtype(cfg):
+    """eval.dtype if set (float32 by default), else the training dtype."""
+    return cfg["eval"].get("dtype", cfg["model"]["dtype"])
 
 
 @torch.no_grad()
@@ -39,7 +44,7 @@ def evaluate(model_path, label, tasks, seed=0, overrides=(), results="results"):
     res = ROOT / results
     set_seed(seed)
     tok = load_tokenizer(model_path)
-    model = load_model(model_path, load_config(overrides=overrides)["model"]["dtype"]).eval()
+    model = load_model(model_path, eval_dtype(load_config(overrides=overrides))).eval()
     accs = {}
     for task in tasks:
         cfg = load_config(task=task, overrides=overrides)

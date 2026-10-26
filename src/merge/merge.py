@@ -5,6 +5,9 @@ Task vector  tv_i = specialist_i - base
   task_arithmetic  base + lam * sum(tv_i)
   ties             base + lam * TIES(tv_i)             (trim small values, elect sign, disjoint mean)
 
+Changed tensors are saved in float32: bf16 rounds away most of a LoRA-sized change (notebook 05).
+Untouched tensors keep the base's own dtype and values.
+
 Example:
   python -m src.merge.merge --method ties --lam 1.0 --density 0.2 \
       --specialists checkpoints/specialists/*/seed42/merged --out checkpoints/merged/ties
@@ -19,6 +22,7 @@ from huggingface_hub import snapshot_download
 from safetensors import safe_open
 from safetensors.torch import save_file
 
+from src.utils.config import load_config
 from src.utils.tracking import git_commit, now, write_json
 
 
@@ -75,7 +79,7 @@ def merge_tensor(base, specs, method, lam, density):
         delta = lam * ties(tvs, density)
     else:
         raise ValueError(method)
-    return (base.float() + delta).to(base.dtype)
+    return base.float() + delta
 
 
 def merge_models(base_path, spec_paths, method, lam=1.0, density=0.2):
@@ -93,7 +97,7 @@ def merge_models(base_path, spec_paths, method, lam=1.0, density=0.2):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--base", default="Qwen/Qwen2.5-0.5B-Instruct")
+    p.add_argument("--base", default=load_config()["model"]["name"])
     p.add_argument("--specialists", nargs="+", required=True)
     p.add_argument("--method", choices=["avg", "task_arithmetic", "ties"], required=True)
     p.add_argument("--lam", type=float, default=1.0, help="scale on merged task vector")

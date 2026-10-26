@@ -10,7 +10,7 @@ from pathlib import Path
 
 import torch
 from peft import LoraConfig, PeftModel
-from transformers import AutoConfig, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM
 from trl import GRPOConfig, GRPOTrainer
 
 from src.data.load import load_split, to_grpo_dataset
@@ -22,16 +22,14 @@ from src.utils.tracking import git_commit, now, write_json
 
 
 def save_full_weights(base_name, adapter_dir, out_dir, tok):
-    """base + LoRA -> full model, saved in the base's own dtype so untouched weights stay
-    bit-identical to the base (important: merging reads specialist - base)."""
+    """base + LoRA -> full model, saved in float32. bf16 would round away most of the LoRA update
+    (notebook 05: 60% of entries lost, direction cosine 0.84). Untouched weights stay bit-identical
+    to the bf16 base, because bf16 -> float32 is exact (important: merging reads specialist - base)."""
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    native = getattr(AutoConfig.from_pretrained(base_name), "dtype", None) or torch.bfloat16
-    if isinstance(native, str):
-        native = getattr(torch, native)
     base = AutoModelForCausalLM.from_pretrained(base_name, dtype=torch.float32)
     merged = PeftModel.from_pretrained(base, str(adapter_dir)).merge_and_unload()
-    merged.to(native).save_pretrained(out_dir)
+    merged.save_pretrained(out_dir)
     tok.save_pretrained(out_dir)
 
 

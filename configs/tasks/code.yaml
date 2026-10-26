@@ -2,7 +2,7 @@ task:
   name: code
   source: hf_mbpp
   n_train: 474               # MBPP full: train + validation + prompt splits
-  n_test: 200
+  n_test: 500                # all of MBPP test
 
 grpo:
   max_completion_length: 512

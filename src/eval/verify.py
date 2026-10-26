@@ -1,9 +1,10 @@
 """Pipeline checks. Each prints PASS / FAIL / INFO lines and exits non-zero on any FAIL.
 
   python -m src.eval.verify data                                   # splits + checkers on gold/junk
-  python -m src.eval.verify eval    --model Qwen/Qwen2.5-0.5B-Instruct --task gsm8k
+  python -m src.eval.verify eval    --task gsm8k                   # base model from configs/base.yaml
   python -m src.eval.verify weights --specialist checkpoints/specialists/gsm8k/seed42
   python -m src.eval.verify merge   --specialists checkpoints/specialists/*/seed42/merged
+  python -m src.eval.verify rescore --results results/warmup_seed42   # CPU: re-grade saved replies
 
 See VERIFY.md for the order and what to do when something fails.
 """
@@ -17,6 +18,7 @@ import torch
 from src.utils.config import TASKS, load_config
 
 FAILS = []
+DEFAULT_BASE = load_config()["model"]["name"]
 
 
 def report(ok, msg, info=False):
@@ -67,16 +69,48 @@ def verify_data(tasks):
         report(false_pass == 0, f"junk answers scored correct: {int(false_pass)} (want 0)")
 
 
+# ------------------------------------------------------------------ rescore
+def verify_rescore(results_dir):
+    """Re-grade every saved reply with this machine's checkers; compare to stored verdicts + scores.csv."""
+    from src.data.load import DATA_DIR
+    from src.eval.rrr import latest_scores
+    from src.rewards import get_checker
+    from src.utils.config import ROOT
+
+    res = ROOT / results_dir
+    print(f"\n== rescore: {res}")
+    scores = latest_scores(res / "scores.csv")
+    files = sorted((res / "generations").glob("*/*.jsonl"))
+    report(len(files) > 0, f"{len(files)} saved generation files found")
+    for f in files:
+        label, task = f.parent.name, f.stem
+        rows = {r["id"]: r for r in map(json.loads, open(DATA_DIR / task / "test.jsonl"))}
+        gens = [json.loads(l) for l in open(f)]
+        missing = [g["id"] for g in gens if g["id"] not in rows]
+        if missing:
+            report(False, f"{label}/{task}: {len(missing)} ids not in data/{task}/test.jsonl (different splits?)")
+            continue
+        check = get_checker(task)
+        new = [check(g["completion"], rows[g["id"]]["answer"], rows[g["id"]]["meta"]) for g in gens]
+        flips = [g["id"] for g, n in zip(gens, new) if n != g["correct"]]
+        acc = sum(new) / len(new)
+        stored = scores.get((label, task))
+        same_acc = stored is not None and abs(stored - acc) < 1e-3
+        report(not flips and same_acc,
+               f"{label:<22} {task:<6} acc {acc:.3f} vs scores.csv {stored}  verdict changes: {len(flips)}"
+               + (f" e.g. {flips[:3]}" if flips else ""))
+
+
 # ------------------------------------------------------------------ eval
 def verify_eval(model_path, task, n):
     from src.data.load import load_split
-    from src.eval.evaluate import generate
+    from src.eval.evaluate import eval_dtype, generate
     from src.utils.model import load_model, load_tokenizer
 
     print(f"\n== eval: {model_path} on {task}")
     cfg = load_config(task=task)
     tok = load_tokenizer(model_path)
-    model = load_model(model_path, cfg["model"]["dtype"]).eval()
+    model = load_model(model_path, eval_dtype(cfg)).eval()
     qs = [r["question"] for r in load_split(task, "test", n)]
     bs, mx = cfg["eval"]["batch_size"], cfg["eval"]["max_new_tokens"]
 
@@ -109,13 +143,13 @@ def verify_weights(spec_dir, base_path):
     report(set(base.keys()) == set(spec.keys()), "same tensor names as base")
     changed, rel = [], []
     for k in base.keys():
-        b, s = base.get(k), spec.get(k)
-        if b.shape != s.shape or b.dtype != s.dtype:
-            report(False, f"{k}: shape/dtype differs from base")
+        b, s = base.get(k).float(), spec.get(k).float()   # base is bf16, saved specialist float32
+        if b.shape != s.shape:
+            report(False, f"{k}: shape differs from base")
             continue
         if not torch.equal(b, s):
             changed.append(k)
-            rel.append(((s.float() - b.float()).norm() / b.float().norm()).item())
+            rel.append(((s - b).norm() / b.norm()).item())
     outside = [k for k in changed if k.split(".")[-2] not in targets]
     report(len(changed) > 0, f"{len(changed)} tensors changed by training")
     report(not outside, f"only LoRA target modules changed (outside: {outside[:3]})")
@@ -140,7 +174,7 @@ def verify_weights(spec_dir, base_path):
     la, lb = peft(ids).logits[0], full(ids).logits[0]
     top1 = (la.argmax(-1) == lb.argmax(-1)).float().mean().item()
     report(top1 >= 0.95, f"saved full model vs base+adapter: same top token at {top1:.0%} of positions")
-    report(True, f"max logit difference {(la - lb).abs().max().item():.3f} (bf16 rounding)", info=True)
+    report(True, f"max logit difference {(la - lb).abs().max().item():.3f} (float32 save: expect ~0)", info=True)
 
 
 # ------------------------------------------------------------------ merge
@@ -150,8 +184,8 @@ def verify_merge(spec_paths, base_path):
     print(f"\n== merge: {len(spec_paths)} specialist(s)")
     base, a = LazyWeights(base_path), LazyWeights(spec_paths[0])
 
-    def equal_to(merged, ref):
-        return all(torch.equal(merged[k], ref.get(k)) for k in merged)
+    def equal_to(merged, ref):   # compare values, not dtypes (base bf16, merges float32)
+        return all(torch.equal(merged[k].float(), ref.get(k).float()) for k in merged)
 
     m, _ = merge_models(base_path, [spec_paths[0]], "avg")
     report(equal_to(m, a), "avg of one specialist == that specialist")
@@ -165,15 +199,16 @@ def verify_merge(spec_paths, base_path):
     if len(spec_paths) >= 2:
         specs = [LazyWeights(p) for p in spec_paths]
         m, changed = merge_models(base_path, spec_paths, "avg")
-        n_changed = [sum(not torch.equal(s.get(k), base.get(k)) for k in base.keys()) for s in specs]
+        n_changed = [sum(not torch.equal(s.get(k).float(), base.get(k).float()) for k in base.keys())
+                     for s in specs]
         report(changed >= max(n_changed), f"avg changes {changed} tensors (each specialist: {n_changed})")
         differs = [not equal_to(m, s) for s in specs]
         report(all(differs), "merged model differs from every individual specialist")
-        k = next(k for k in base.keys() if not torch.equal(specs[0].get(k), base.get(k)))
+        k = next(k for k in base.keys() if not torch.equal(specs[0].get(k).float(), base.get(k).float()))
         expect = base.get(k).float() + torch.stack(
             [s.get(k).float() - base.get(k).float() for s in specs]).mean(0)
         err = (m[k].float() - expect).abs().max().item()
-        report(err < 1e-2, f"avg on '{k}' matches hand computation (max err {err:.1e})")
+        report(err < 1e-6, f"avg on '{k}' matches hand computation (max err {err:.1e})")
 
 
 def main():
@@ -182,19 +217,23 @@ def main():
     d = sub.add_parser("data")
     d.add_argument("--tasks", nargs="+", default=TASKS)
     e = sub.add_parser("eval")
-    e.add_argument("--model", default="Qwen/Qwen2.5-0.5B-Instruct")
+    e.add_argument("--model", default=DEFAULT_BASE)
     e.add_argument("--task", default="gsm8k")
     e.add_argument("--n", type=int, default=16)
     w = sub.add_parser("weights")
     w.add_argument("--specialist", required=True, help="checkpoints/specialists/<task>/seed<k>")
-    w.add_argument("--base", default="Qwen/Qwen2.5-0.5B-Instruct")
+    w.add_argument("--base", default=DEFAULT_BASE)
     m = sub.add_parser("merge")
     m.add_argument("--specialists", nargs="+", required=True, help=".../merged folders")
-    m.add_argument("--base", default="Qwen/Qwen2.5-0.5B-Instruct")
+    m.add_argument("--base", default=DEFAULT_BASE)
+    r = sub.add_parser("rescore")
+    r.add_argument("--results", default="results", help="folder holding scores.csv + generations/")
     a = p.parse_args()
 
     if a.cmd == "data":
         verify_data(a.tasks)
+    elif a.cmd == "rescore":
+        verify_rescore(a.results)
     elif a.cmd == "eval":
         verify_eval(a.model, a.task, a.n)
     elif a.cmd == "weights":

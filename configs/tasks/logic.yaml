@@ -7,4 +7,4 @@ task:
     depth_constraint: 2
     width_constraint: 2
   n_train: 2000
-  n_test: 200
+  n_test: 1000               # generated, so a big test set is free; 200 gave ±3 points of noise

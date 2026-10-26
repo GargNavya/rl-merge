@@ -2,4 +2,4 @@ task:
   name: gsm8k
   source: hf_gsm8k
   n_train: 2000
-  n_test: 200
+  n_test: 500                # 200 gave ±3 points of noise per score

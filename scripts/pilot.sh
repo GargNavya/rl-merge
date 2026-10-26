@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# End-to-end dry run of the whole pipeline at small scale (~45 min on a 6GB GPU).
+# End-to-end dry run of the whole pipeline at small scale.
 # Everything goes to checkpoints/pilot/ and results/pilot/, so real results stay clean.
 #   STEPS=30 N_TEST=50 bash scripts/pilot.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BASE=${BASE:-Qwen/Qwen2.5-0.5B-Instruct}
+BASE=${BASE:-$(python -c "from src.utils.config import load_config; print(load_config()['model']['name'])")}
 TASKS=${TASKS:-"gsm8k logic"}
 STEPS=${STEPS:-30}
 N_TEST=${N_TEST:-50}

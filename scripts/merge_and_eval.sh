@@ -3,10 +3,9 @@
 #   METHODS="ties" LAM=0.5 bash scripts/merge_and_eval.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BASE=${BASE:-Qwen/Qwen2.5-0.5B-Instruct}
+BASE=${BASE:-$(python -c "from src.utils.config import load_config; print(load_config()['model']['name'])")}
 SEED=${SEED:-42}
-# TASKS=${TASKS:-"gsm8k countdown logic sudoku code"}
-TASKS=${TASKS:-"gsm8k logic code"}
+TASKS=${TASKS:-$(python -c "from src.utils.config import TASKS; print(' '.join(TASKS))")}
 METHODS=${METHODS:-"avg task_arithmetic ties"}
 LAM=${LAM:-1.0}
 DENSITY=${DENSITY:-0.2}
