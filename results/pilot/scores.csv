@@ -1,0 +1,13 @@
+time,label,model,task,n,accuracy,format_rate,mean_len,seed,git_commit
+2026-10-25T11:35:09,base,Qwen/Qwen2.5-1.5B-Instruct,gsm8k,50,0.64,0.06,250.8,0,a9bd46a
+2026-10-25T11:35:54,base,Qwen/Qwen2.5-1.5B-Instruct,logic,50,0.24,0.6,316.8,0,a9bd46a
+2026-10-25T11:52:18,spec-gsm8k,checkpoints/pilot/gsm8k/merged,gsm8k,50,0.74,0.84,265.1,0,a9bd46a
+2026-10-25T11:53:09,spec-gsm8k,checkpoints/pilot/gsm8k/merged,logic,50,0.24,0.92,312.2,0,a9bd46a
+2026-10-25T12:11:20,spec-logic,checkpoints/pilot/logic/merged,gsm8k,50,0.64,0.44,276.8,0,a9bd46a
+2026-10-25T12:12:17,spec-logic,checkpoints/pilot/logic/merged,logic,50,0.18,0.94,358.2,0,a9bd46a
+2026-10-25T12:14:21,merge-avg,checkpoints/pilot/merged-avg,gsm8k,50,0.74,0.82,271.8,0,a9bd46a
+2026-10-25T12:15:12,merge-avg,checkpoints/pilot/merged-avg,logic,50,0.2,0.94,346.5,0,a9bd46a
+2026-10-25T12:16:24,merge-task_arithmetic,checkpoints/pilot/merged-task_arithmetic,gsm8k,50,0.7,0.84,301.3,0,a9bd46a
+2026-10-25T12:17:18,merge-task_arithmetic,checkpoints/pilot/merged-task_arithmetic,logic,50,0.18,0.98,364.1,0,a9bd46a
+2026-10-25T12:19:04,merge-ties,checkpoints/pilot/merged-ties,gsm8k,50,0.72,0.82,278.8,0,a9bd46a
+2026-10-25T12:19:53,merge-ties,checkpoints/pilot/merged-ties,logic,50,0.18,0.94,350.2,0,a9bd46a
