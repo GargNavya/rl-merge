@@ -1,0 +1,17 @@
+
+Gain over base (rows = model, cols = task). Diagonal = specialist on its own task.
+                              gsm8k      logic       code
+spec-gsm8k                   +0.078     +0.015     -0.331
+spec-logic                   -0.534     +0.361     -0.012
+spec-code                    -0.022     -0.015     +0.096
+merge-avg                    +0.058     +0.120     +0.058
+merge-task_arithmetic        +0.054     +0.362     -0.062
+merge-ties                   +0.042     +0.279     +0.072
+
+RRR per task
+                              gsm8k      logic       code    macro    worst
+merge-avg                      0.74       0.33       0.60     0.56     0.33
+merge-task_arithmetic          0.69       1.00      -0.65     0.35    -0.65
+merge-ties                     0.54       0.77       0.75     0.69     0.54
+
+[rrr] saved /home/priya/novel/oml/RL-merge_analysis/rl-merge_airavat/results/rrr.csv

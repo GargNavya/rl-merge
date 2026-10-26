@@ -1,0 +1,15 @@
+
+== weights: checkpoints/specialists/code/seed42
+Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 888.75it/s]
+  [PASS] same tensor names as base
+  [PASS] 196 tensors changed by training
+  [PASS] only LoRA target modules changed (outside: [])
+  [INFO] relative change |dW|/|W|: mean 2.75e-03, max 4.98e-03
+  [PASS] GRPO groups with no reward variation: 75% (want well below 90%)
+  [INFO] training reward first log 0.425 -> last log 0.800
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<01:49,  3.07it/s]Loading weights:  19%|█▊        | 63/338 [00:00<00:02, 121.27it/s]Loading weights:  36%|███▌      | 121/338 [00:00<00:00, 218.64it/s]Loading weights:  47%|████▋     | 159/338 [00:01<00:01, 166.35it/s]Loading weights:  65%|██████▌   | 220/338 [00:01<00:00, 245.48it/s]Loading weights:  79%|███████▉  | 267/338 [00:01<00:00, 176.79it/s]Loading weights:  97%|█████████▋| 328/338 [00:01<00:00, 240.94it/s]Loading weights: 100%|██████████| 338/338 [00:01<00:00, 202.22it/s]
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 96/338 [00:00<00:00, 953.31it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 2925.21it/s]
+  [PASS] saved full model vs base+adapter: same top token at 100% of positions
+  [INFO] max logit difference 0.000 (float32 save: expect ~0)
+
+ALL CHECKS PASSED
