@@ -1,5 +1,7 @@
 # rl-merge
 
+Every new session: `source /22tdata/$USER/oml_nav_rlmerge/env.sh`
+
 Warm-up for *Does RL-Induced Reasoning Survive Merging?* (Gate 0: pipeline check).
 
 Five GRPO specialists from one base (Qwen2.5-0.5B-Instruct, LoRA), merged three ways,

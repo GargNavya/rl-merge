@@ -1,17 +1,0 @@
-
-== merge: 3 specialist(s)
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 749.88it/s]
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 857.94it/s]
-  [PASS] avg of one specialist == that specialist
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 756.53it/s]
-  [PASS] avg of a specialist with itself == that specialist
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 990.55it/s]
-  [PASS] TIES of one specialist (keep all values) == that specialist
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 850.94it/s]
-  [PASS] task arithmetic with scale 0 == base
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 774.33it/s]
-  [PASS] avg changes 168 tensors (each specialist: [168, 168, 168])
-  [PASS] merged model differs from every individual specialist
-  [PASS] avg on 'model.layers.0.mlp.down_proj.weight' matches hand computation (max err 8.1e-05)
-
-ALL CHECKS PASSED

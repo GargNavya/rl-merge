@@ -1,37 +1,0 @@
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 782.50it/s]
-[merge] avg: 3 models, 168 tensors changed -> checkpoints/merged/avg
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 4351.42it/s]
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-avg                gsm8k      acc=0.440 format=0.42 len=260
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-avg                logic      acc=0.225 format=0.97 len=239
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-avg                code       acc=0.275 format=1.00 len=98
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 744.60it/s]
-[merge] task_arithmetic: 3 models, 168 tensors changed -> checkpoints/merged/task_arithmetic
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 3348.29it/s]
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-task_arithmetic    gsm8k      acc=0.415 format=0.98 len=216
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-task_arithmetic    logic      acc=0.330 format=0.99 len=159
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-task_arithmetic    code       acc=0.305 format=0.99 len=94
-Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 1006.19it/s]
-[merge] ties: 3 models, 168 tensors changed -> checkpoints/merged/ties
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 5390.87it/s]
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-ties               gsm8k      acc=0.410 format=0.96 len=234
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-ties               logic      acc=0.385 format=0.98 len=194
-  16/200  32/200  48/200  64/200  80/200  96/200  112/200  128/200  144/200  160/200  176/200  192/200  200/200                    [eval] merge-ties               code       acc=0.340 format=1.00 len=93
-
-Gain over base (rows = model, cols = task). Diagonal = specialist on its own task.
-                              gsm8k      logic       code
-spec-gsm8k                   +0.005     -0.020     -0.065
-spec-logic                   -0.045     +0.155     +0.005
-spec-code                    -0.385     +0.000     +0.135
-merge-avg                    +0.010     +0.045     +0.085
-merge-task_arithmetic        -0.015     +0.150     +0.115
-merge-ties                   -0.020     +0.205     +0.150
-
-RRR per task
-                              gsm8k      logic       code    macro    worst
-merge-avg                       n/a       0.29       0.63     0.46     0.29
-merge-task_arithmetic           n/a       0.97       0.85     0.91     0.85
-merge-ties                      n/a       1.32       1.11     1.22     1.11
-
-[rrr] n/a = specialist gained < 0.02 on: ['gsm8k']. Train longer or adjust difficulty.
-
-[rrr] saved /mnt/EAD854DBD854A799/IITB Course/Sem 7/CS769 (Optimisation in Machine Learning)/Project (Does RL-induced reasoning survive merging)/Does_RL-induced_reasoning_survive_merging/rl-merge/results/rrr.csv

@@ -44,7 +44,12 @@ def _mbpp(cfg):
 
     train = [conv(ex, "train", i) for i, ex in
              enumerate(list(ds["train"]) + list(ds["validation"]) + list(ds["prompt"]))]
-    test = [conv(ex, "test", i) for i, ex in enumerate(ds["test"])]
+    test, seen = [], set()
+    for i, ex in enumerate(ds["test"]):
+        r = conv(ex, "test", i)
+        if r["question"] not in seen:          # MBPP test repeats a few problems
+            seen.add(r["question"])
+            test.append(r)
     return {"train": train, "test": test}
 
 
