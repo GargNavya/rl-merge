@@ -1,5 +1,7 @@
 # Shared settings for every specialist. Task files override only what they must.
 seed: 42
+run: v1                  # names the folders of this setup: checkpoints/{specialists,merged}/<run>/, results/<run>/
+                         # change it (v2, ...) whenever training setup changes, so nothing is overwritten
 
 model:
   name: Qwen/Qwen2.5-1.5B-Instruct

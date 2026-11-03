@@ -1,4 +1,5 @@
 """Print random evaluated examples to proofread the checker by eye.
+Reads results/<run>/seed<k>/generations/ (run and seed from configs/base.yaml unless given).
 
 Examples:
   python -m src.eval.show_samples --label base --task gsm8k
@@ -10,7 +11,7 @@ import importlib
 import json
 import random
 
-from src.utils.config import ROOT
+from src.utils.config import ROOT, results_dir
 
 
 def main():
@@ -19,12 +20,15 @@ def main():
     p.add_argument("--task", required=True)
     p.add_argument("--n", type=int, default=5)
     p.add_argument("--only", choices=["right", "wrong"], default=None)
-    p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--results", default="results")
+    p.add_argument("--seed", type=int, default=0, help="which random examples to show")
+    p.add_argument("--run", default=None, help="default: run in configs/base.yaml")
+    p.add_argument("--train-seed", type=int, default=None, help="default: seed in base.yaml")
+    p.add_argument("--results", default=None, help="explicit results folder (overrides run/train-seed)")
     p.add_argument("--full", action="store_true", help="don't shorten long replies")
     a = p.parse_args()
+    res = ROOT / a.results if a.results else results_dir(a.train_seed, a.run)
 
-    gens = [json.loads(l) for l in open(ROOT / a.results / "generations" / a.label / f"{a.task}.jsonl")]
+    gens = [json.loads(l) for l in open(res / "generations" / a.label / f"{a.task}.jsonl")]
     rows = {r["id"]: r for r in map(json.loads, open(ROOT / "data" / a.task / "test.jsonl"))}
     extract = importlib.import_module(f"src.rewards.{a.task}").extract
 

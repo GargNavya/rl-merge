@@ -1,8 +1,10 @@
 """Score one model on one or more tasks. Same code and same questions for every model.
 
+Results go to results/<run>/seed<train seed>/ (scores.csv + generations/), or to --results if given.
+
 Example:
   python -m src.eval.evaluate --model Qwen/Qwen2.5-1.5B-Instruct --label base
-  python -m src.eval.evaluate --model checkpoints/specialists/gsm8k/seed42/merged --label spec-gsm8k
+  python -m src.eval.evaluate --model checkpoints/specialists/v1/gsm8k/seed42/merged --label spec-gsm8k
 """
 import argparse
 import json
@@ -13,7 +15,7 @@ import torch
 from src.data.load import load_split
 from src.data.prompts import build_messages
 from src.rewards import format_ok, get_checker
-from src.utils.config import ROOT, TASKS, load_config
+from src.utils.config import ROOT, TASKS, load_config, results_dir
 from src.utils.model import load_model, load_tokenizer
 from src.utils.seed import set_seed
 from src.utils.tracking import append_score, git_commit, now
@@ -40,8 +42,8 @@ def generate(model, tok, questions, batch_size, max_new_tokens):
     return outs
 
 
-def evaluate(model_path, label, tasks, seed=0, overrides=(), results="results"):
-    res = ROOT / results
+def evaluate(model_path, label, tasks, seed=0, overrides=(), results=None, run=None, train_seed=None):
+    res = ROOT / results if results else results_dir(train_seed, run)
     set_seed(seed)
     tok = load_tokenizer(model_path)
     model = load_model(model_path, eval_dtype(load_config(overrides=overrides))).eval()
@@ -70,19 +72,22 @@ def evaluate(model_path, label, tasks, seed=0, overrides=(), results="results"):
                      res / "scores.csv")
         accs[task] = acc
         print(f"[eval] {label:<24} {task:<10} acc={acc:.3f} format={fmt:.2f} len={mean_len:.0f}")
+    print(f"[eval] saved to {res}")
     return accs
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--model", required=True)
-    p.add_argument("--label", required=True, help="base | spec-<task> | merge-<method> ...")
+    p.add_argument("--label", required=True, help="base | spec-<task> | merge-<merge name> ...")
     p.add_argument("--tasks", nargs="+", default=TASKS)
-    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--seed", type=int, default=0, help="eval seed (greedy decoding, so rarely matters)")
     p.add_argument("--set", nargs="*", default=[], help="overrides like eval.n_test=50")
-    p.add_argument("--results", default="results", help="folder for scores.csv + generations")
+    p.add_argument("--run", default=None, help="default: run in configs/base.yaml")
+    p.add_argument("--train-seed", type=int, default=None, help="picks results/<run>/seed<k>; default: seed in base.yaml")
+    p.add_argument("--results", default=None, help="explicit folder for scores.csv + generations (overrides run/seed)")
     a = p.parse_args()
-    evaluate(a.model, a.label, a.tasks, a.seed, a.set, a.results)
+    evaluate(a.model, a.label, a.tasks, a.seed, a.set, a.results, a.run, a.train_seed)
 
 
 if __name__ == "__main__":

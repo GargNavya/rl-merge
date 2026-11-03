@@ -1,10 +1,14 @@
 """Train one GRPO specialist. Every specialist uses this same script; only the task config differs.
 
+Output: checkpoints/specialists/<run>/<task>/seed<seed>/  (run from configs/base.yaml, or --set run=v2)
+Refuses to write into a folder that already has a run in it, unless --overwrite.
+
 Example:
   python -m src.train.grpo --task gsm8k
   python -m src.train.grpo --task gsm8k --seed 1 --set grpo.max_steps=20
 """
 import argparse
+import sys
 import time
 from pathlib import Path
 
@@ -15,7 +19,7 @@ from trl import GRPOConfig, GRPOTrainer
 
 from src.data.load import load_split, to_grpo_dataset
 from src.rewards import make_reward_funcs
-from src.utils.config import ROOT, load_config
+from src.utils.config import load_config, spec_dir
 from src.utils.model import load_model, load_tokenizer, pick_dtype
 from src.utils.seed import set_seed
 from src.utils.tracking import git_commit, now, write_json
@@ -37,15 +41,19 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--task", required=True)
     p.add_argument("--seed", type=int, default=None)
-    p.add_argument("--set", nargs="*", default=[], help="overrides like grpo.max_steps=20")
+    p.add_argument("--set", nargs="*", default=[], help="overrides like grpo.max_steps=20 run=v2")
     p.add_argument("--out", default=None)
+    p.add_argument("--overwrite", action="store_true", help="allow writing into a non-empty output folder")
     a = p.parse_args()
 
     cfg = load_config(task=a.task, overrides=a.set)
     task = cfg["task"]["name"]
     seed = a.seed if a.seed is not None else cfg["seed"]
+    out = Path(a.out) if a.out else spec_dir(task, seed, cfg.get("run"))
+    if out.exists() and any(out.iterdir()) and not a.overwrite:
+        sys.exit(f"[train] {out} is not empty. Change `run` in configs/base.yaml (or --set run=...), "
+                 f"or pass --overwrite to replace it.")
     set_seed(seed)
-    out = Path(a.out) if a.out else ROOT / "checkpoints" / "specialists" / task / f"seed{seed}"
 
     tok = load_tokenizer(cfg["model"]["name"])
     model = load_model(cfg["model"]["name"], cfg["model"]["dtype"])
@@ -79,7 +87,7 @@ def main():
     save_full_weights(cfg["model"]["name"], out / "adapter", out / "merged", tok)
 
     write_json({
-        "task": task, "seed": seed, "config": cfg, "git_commit": git_commit(),
+        "task": task, "seed": seed, "run": cfg.get("run"), "config": cfg, "git_commit": git_commit(),
         "finished": now(), "train_minutes": round(minutes, 1),
         "peak_gpu_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2) if torch.cuda.is_available() else None,
         "log_history": trainer.state.log_history,

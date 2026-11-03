@@ -2,9 +2,10 @@
 
   python -m src.eval.verify data                                   # splits + checkers on gold/junk
   python -m src.eval.verify eval    --task gsm8k                   # base model from configs/base.yaml
-  python -m src.eval.verify weights --specialist checkpoints/specialists/gsm8k/seed42
-  python -m src.eval.verify merge   --specialists checkpoints/specialists/*/seed42/merged
-  python -m src.eval.verify rescore --results results/warmup_seed42   # CPU: re-grade saved replies
+  python -m src.eval.verify weights --specialist checkpoints/specialists/v1/gsm8k/seed42
+  python -m src.eval.verify merge   --specialists checkpoints/specialists/v1/*/seed42/merged
+  python -m src.eval.verify rescore                                # CPU: re-grade results/<run>/seed<k>
+  python -m src.eval.verify rescore --results results/warmup_seed42
 
 See VERIFY.md for the order and what to do when something fails.
 """
@@ -16,6 +17,7 @@ from pathlib import Path
 import torch
 
 from src.utils.config import TASKS, load_config
+from src.utils.config import results_dir as run_results_dir
 
 FAILS = []
 DEFAULT_BASE = load_config()["model"]["name"]
@@ -70,14 +72,14 @@ def verify_data(tasks):
 
 
 # ------------------------------------------------------------------ rescore
-def verify_rescore(results_dir):
+def verify_rescore(results=None, run=None, seed=None):
     """Re-grade every saved reply with this machine's checkers; compare to stored verdicts + scores.csv."""
     from src.data.load import DATA_DIR
     from src.eval.rrr import latest_scores
     from src.rewards import get_checker
     from src.utils.config import ROOT
 
-    res = ROOT / results_dir
+    res = ROOT / results if results else run_results_dir(seed, run)
     print(f"\n== rescore: {res}")
     scores = latest_scores(res / "scores.csv")
     files = sorted((res / "generations").glob("*/*.jsonl"))
@@ -221,19 +223,21 @@ def main():
     e.add_argument("--task", default="gsm8k")
     e.add_argument("--n", type=int, default=16)
     w = sub.add_parser("weights")
-    w.add_argument("--specialist", required=True, help="checkpoints/specialists/<task>/seed<k>")
+    w.add_argument("--specialist", required=True, help="checkpoints/specialists/<run>/<task>/seed<k>")
     w.add_argument("--base", default=DEFAULT_BASE)
     m = sub.add_parser("merge")
     m.add_argument("--specialists", nargs="+", required=True, help=".../merged folders")
     m.add_argument("--base", default=DEFAULT_BASE)
     r = sub.add_parser("rescore")
-    r.add_argument("--results", default="results", help="folder holding scores.csv + generations/")
+    r.add_argument("--results", default=None, help="explicit folder holding scores.csv + generations/")
+    r.add_argument("--run", default=None, help="default: run in configs/base.yaml")
+    r.add_argument("--seed", type=int, default=None, help="training seed; default: seed in base.yaml")
     a = p.parse_args()
 
     if a.cmd == "data":
         verify_data(a.tasks)
     elif a.cmd == "rescore":
-        verify_rescore(a.results)
+        verify_rescore(a.results, a.run, a.seed)
     elif a.cmd == "eval":
         verify_eval(a.model, a.task, a.n)
     elif a.cmd == "weights":

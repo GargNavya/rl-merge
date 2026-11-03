@@ -8,13 +8,17 @@ Task vector  tv_i = specialist_i - base
 Changed tensors are saved in float32: bf16 rounds away most of a LoRA-sized change (notebook 05).
 Untouched tensors keep the base's own dtype and values.
 
+Defaults (run and seed from configs/base.yaml):
+  specialists  checkpoints/specialists/<run>/<task>/seed<k>/merged, for each of --tasks
+  out          checkpoints/merged/<run>/seed<k>/<merge name>   e.g. ties_d0.2_lam1
+
 Example:
-  python -m src.merge.merge --method ties --lam 1.0 --density 0.2 \
-      --specialists checkpoints/specialists/*/seed42/merged --out checkpoints/merged/ties
+  python -m src.merge.merge --method ties --lam 1.0 --density 0.2
 """
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
 
 import torch
@@ -22,7 +26,7 @@ from huggingface_hub import snapshot_download
 from safetensors import safe_open
 from safetensors.torch import save_file
 
-from src.utils.config import load_config
+from src.utils.config import TASKS, load_config, merge_name, merged_dir, spec_dir
 from src.utils.tracking import git_commit, now, write_json
 
 
@@ -96,29 +100,38 @@ def merge_models(base_path, spec_paths, method, lam=1.0, density=0.2):
 
 
 def main():
+    cfg = load_config()
     p = argparse.ArgumentParser()
-    p.add_argument("--base", default=load_config()["model"]["name"])
-    p.add_argument("--specialists", nargs="+", required=True)
+    p.add_argument("--base", default=cfg["model"]["name"])
     p.add_argument("--method", choices=["avg", "task_arithmetic", "ties"], required=True)
     p.add_argument("--lam", type=float, default=1.0, help="scale on merged task vector")
     p.add_argument("--density", type=float, default=0.2, help="TIES: fraction of values kept")
-    p.add_argument("--out", required=True)
+    p.add_argument("--run", default=None, help="default: run in configs/base.yaml")
+    p.add_argument("--seed", type=int, default=None, help="training seed; default: seed in base.yaml")
+    p.add_argument("--tasks", nargs="+", default=TASKS, help="specialists to merge (when --specialists not given)")
+    p.add_argument("--specialists", nargs="+", default=None, help="explicit .../merged folders")
+    p.add_argument("--out", default=None, help="explicit output folder")
     a = p.parse_args()
 
-    out = Path(a.out)
+    specs = a.specialists or [str(spec_dir(t, a.seed, a.run) / "merged") for t in a.tasks]
+    missing = [s for s in specs if not Path(s).exists()]
+    if missing:
+        sys.exit(f"[merge] specialist folders not found: {missing}")
+    out = Path(a.out) if a.out else merged_dir(merge_name(a.method, a.lam, a.density), a.seed, a.run)
+
     out.mkdir(parents=True, exist_ok=True)
-    merged, changed = merge_models(a.base, a.specialists, a.method, a.lam, a.density)
+    merged, changed = merge_models(a.base, specs, a.method, a.lam, a.density)
     save_file(merged, out / "model.safetensors", metadata={"format": "pt"})
 
-    src = Path(a.specialists[0])
+    src = Path(specs[0])
     for f in src.iterdir():
         if f.suffix in {".json", ".txt", ".model", ".jinja"} and "safetensors" not in f.name:
             shutil.copy(f, out / f.name)
 
     write_json({"method": a.method, "lam": a.lam, "density": a.density, "base": a.base,
-                "specialists": a.specialists, "tensors_changed": changed,
+                "specialists": specs, "tensors_changed": changed,
                 "git_commit": git_commit(), "time": now()}, out / "merge_info.json")
-    print(f"[merge] {a.method}: {len(a.specialists)} models, {changed} tensors changed -> {out}")
+    print(f"[merge] {a.method}: {len(specs)} models, {changed} tensors changed -> {out}")
 
 
 if __name__ == "__main__":

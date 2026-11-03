@@ -8,5 +8,9 @@ data/*
 !data/.gitkeep
 checkpoints/*
 !checkpoints/.gitkeep
-results/generations/
+results/**/generations/
+
+share/
+
 *.zip
+SETUP.md

@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# Merge all specialists with each method, score the merged models, then compute RRR.
-#   METHODS="ties" LAM=0.5 bash scripts/merge_and_eval.sh
+# Merge all specialists of one run + seed with each method, score the merged models, then compute RRR.
+# Merges go to checkpoints/merged/<run>/seed<k>/<merge name>, labels are merge-<merge name>.
+#   METHODS="ties" LAM=0.5 DENSITY=0.3 bash scripts/merge_and_eval.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 BASE=${BASE:-$(python -c "from src.utils.config import load_config; print(load_config()['model']['name'])")}
-SEED=${SEED:-42}
+RUN=${RUN:-$(python -m src.utils.config run)}
+SEED=${SEED:-$(python -m src.utils.config seed)}
 TASKS=${TASKS:-$(python -c "from src.utils.config import TASKS; print(' '.join(TASKS))")}
 METHODS=${METHODS:-"avg task_arithmetic ties"}
 LAM=${LAM:-1.0}
 DENSITY=${DENSITY:-0.2}
 
-SPECS=()
-for t in $TASKS; do SPECS+=("checkpoints/specialists/$t/seed$SEED/merged"); done
-
 LABELS=()
 for m in $METHODS; do
-  label="merge-$m"
+  name=$(python -m src.utils.config mergename "$m" --lam "$LAM" --density "$DENSITY")
   python -m src.merge.merge --base "$BASE" --method "$m" --lam "$LAM" --density "$DENSITY" \
-      --specialists "${SPECS[@]}" --out "checkpoints/merged/$m"
-  python -m src.eval.evaluate --model "checkpoints/merged/$m" --label "$label"
-  LABELS+=("$label")
+      --run "$RUN" --seed "$SEED" --tasks $TASKS
+  python -m src.eval.evaluate --model "$(python -m src.utils.config merged "$name" --seed "$SEED" --run "$RUN")" \
+      --label "merge-$name" --run "$RUN" --train-seed "$SEED"
+  LABELS+=("merge-$name")
 done
 
-python -m src.eval.rrr --merged "${LABELS[@]}" --tasks $TASKS
+python -m src.eval.rrr --merged "${LABELS[@]}" --tasks $TASKS --run "$RUN" --seed "$SEED"
