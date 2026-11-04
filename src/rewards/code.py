@@ -17,13 +17,15 @@ TIMEOUT_S = 5.0
 
 
 def extract(text: str, meta: str = "") -> str | None:
-    """Last code block inside <answer>/boxed if present, else last code block in the reply."""
-    final = extract_final(text)
-    if final is not None:
-        blocks = _BLOCK.findall(final)
-        return blocks[-1] if blocks else final
+    """The code answer is a ```python block, wherever it sits; <answer> tags are ignored for code.
+    1. last code block in the reply that defines something (def/class); else the last code block
+    2. no code block at all: whatever is inside <answer>/boxed (raw code without a fence)
+    Until 4 Nov, tags came first: a number inside <answer> hid correct code written outside the tags."""
     blocks = _BLOCK.findall(text or "")
-    return blocks[-1] if blocks else None
+    if blocks:
+        defining = [b for b in blocks if re.search(r"^\s*(def|class)\s", b, re.M)]
+        return (defining or blocks)[-1]
+    return extract_final(text)
 
 
 def run_tests(code: str, tests: list[str], setup: str = "", timeout: float = TIMEOUT_S) -> bool:

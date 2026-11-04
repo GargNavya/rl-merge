@@ -194,3 +194,13 @@ def test_code_infinite_loop_times_out():
 def test_code_setup_used():
     meta = json.dumps({"tests": ["assert f() == 3"], "setup": "X = 3"})
     assert get_checker("code")(tag("def f():\n    return X"), "", meta) == 1.0
+
+
+def test_code_block_outside_tags_beats_tagged_number():
+    # real spec-gsm8k habit: correct code, then a number in <answer>
+    assert get_checker("code")(f"Reasoning.\n{GOOD}\n<answer>5</answer>", "", CODE_META) == 1.0
+
+
+def test_code_prefers_block_that_defines():
+    usage = "```python\nprint(add(2, 3))\n```"
+    assert get_checker("code")(f"{GOOD}\nExample:\n{usage}", "", CODE_META) == 1.0
