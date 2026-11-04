@@ -1,0 +1,11 @@
+task:
+  name: logic_hard           # same checker as logic (src/rewards/logic_hard.py); separate data/ and checkpoints
+  source: reasoning_gym
+  rg_name: knights_knaves
+  rg_config:
+    n_people: 3              # 8 possible answers, chance 12.5%. Base model (v1 prompt): 13.6% greedy
+    depth_constraint: 2
+    width_constraint: 2
+  n_train: 2000
+  n_test: 1000
+  train_split: train_filtered   # made by `python -m src.data.filter --task logic_hard`

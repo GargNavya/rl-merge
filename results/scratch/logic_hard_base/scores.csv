@@ -1,0 +1,2 @@
+time,label,model,task,n,accuracy,format_rate,mean_len,seed,git_commit
+2026-11-04T08:55:50,base,Qwen/Qwen2.5-1.5B-Instruct,logic_hard,1000,0.136,0.774,219.9,0,70f01e3-dirty

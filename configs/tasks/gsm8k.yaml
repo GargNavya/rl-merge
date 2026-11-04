@@ -1,5 +1,6 @@
 task:
   name: gsm8k
   source: hf_gsm8k
-  n_train: 2000
+  n_train: 2000              # size of train.jsonl (v1 trained on it)
   n_test: 500                # 200 gave ±3 points of noise per score
+  train_split: train_filtered   # v2+: made by `python -m src.data.filter --task gsm8k`; "train" = v1 data

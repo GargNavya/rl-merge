@@ -6,5 +6,6 @@ task:
     n_people: 2
     depth_constraint: 2
     width_constraint: 2
-  n_train: 2000
+  n_train: 2000              # size of train.jsonl (v1 trained on it)
   n_test: 1000               # generated, so a big test set is free; 200 gave ±3 points of noise
+  train_split: train_filtered   # v2+: made by `python -m src.data.filter --task logic`; "train" = v1 data

@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-TASKS = ["gsm8k", "logic", "code"]  # countdown, sudoku: base model near 0%, skipped for now
+DEFAULT_TASKS = ["gsm8k", "logic", "code"]  # countdown, sudoku: base model near 0%, skipped for now
 DEFAULT_RUN = "v1"
 
 
@@ -47,6 +47,11 @@ def load_config(base="configs/base.yaml", task=None, overrides=()) -> dict:
 
 def task_config(name: str) -> dict:
     return load_yaml(ROOT / "configs" / "tasks" / f"{name}.yaml")["task"]
+
+
+# default task lists: `tasks:` (train + eval) and `merge_tasks:` (merge + RRR) in configs/base.yaml
+TASKS = list(load_config().get("tasks", DEFAULT_TASKS))
+MERGE_TASKS = list(load_config().get("merge_tasks", TASKS))
 
 
 # ---------------------------------------------------------------- run layout

@@ -14,7 +14,7 @@ import torch
 
 from src.data.load import load_split
 from src.data.prompts import build_messages
-from src.rewards import format_ok, get_checker
+from src.rewards import get_checker, get_format_check
 from src.utils.config import ROOT, TASKS, load_config, results_dir
 from src.utils.model import load_model, load_tokenizer
 from src.utils.seed import set_seed
@@ -27,10 +27,10 @@ def eval_dtype(cfg):
 
 
 @torch.no_grad()
-def generate(model, tok, questions, batch_size, max_new_tokens):
+def generate(model, tok, questions, batch_size, max_new_tokens, task=None, style=None):
     outs = []
     for i in range(0, len(questions), batch_size):
-        texts = [tok.apply_chat_template(build_messages(q), tokenize=False, add_generation_prompt=True)
+        texts = [tok.apply_chat_template(build_messages(q, task, style), tokenize=False, add_generation_prompt=True)
                  for q in questions[i:i + batch_size]]
         enc = tok(texts, return_tensors="pt", padding=True).to(model.device)
         gen = model.generate(**enc, max_new_tokens=max_new_tokens, do_sample=False,
@@ -52,11 +52,11 @@ def evaluate(model_path, label, tasks, seed=0, overrides=(), results=None, run=N
         cfg = load_config(task=task, overrides=overrides)
         rows = load_split(task, "test", cfg["eval"]["n_test"])
         comps = generate(model, tok, [r["question"] for r in rows],
-                         cfg["eval"]["batch_size"], cfg["eval"]["max_new_tokens"])
-        checker = get_checker(task)
+                         cfg["eval"]["batch_size"], cfg["eval"]["max_new_tokens"], task, cfg.get("prompt_style"))
+        checker, fmt_ok = get_checker(task), get_format_check(task, cfg.get("prompt_style"))
         scores = [checker(c, r["answer"], r["meta"]) for c, r in zip(comps, rows)]
         acc = sum(scores) / len(scores)
-        fmt = sum(format_ok(c) for c in comps) / len(comps)
+        fmt = sum(fmt_ok(c) for c in comps) / len(comps)
         mean_len = sum(len(tok(c)["input_ids"]) for c in comps) / len(comps)
 
         gen_path = res / "generations" / label / f"{task}.jsonl"

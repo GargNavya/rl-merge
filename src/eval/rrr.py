@@ -12,7 +12,7 @@ import argparse
 import csv
 from pathlib import Path
 
-from src.utils.config import TASKS, results_dir
+from src.utils.config import MERGE_TASKS, results_dir
 
 MIN_GAIN = 0.02  # below this the specialist barely improved and RRR is noise
 
@@ -46,7 +46,7 @@ def main():
     p.add_argument("--run", default=None, help="default: run in configs/base.yaml")
     p.add_argument("--seed", type=int, default=None, help="training seed; default: seed in base.yaml")
     p.add_argument("--merged", nargs="+", required=True)
-    p.add_argument("--tasks", nargs="+", default=TASKS)
+    p.add_argument("--tasks", nargs="+", default=MERGE_TASKS, help="default: merge_tasks in base.yaml")
     a = p.parse_args()
     scores = a.scores or str(results_dir(a.seed, a.run) / "scores.csv")
 

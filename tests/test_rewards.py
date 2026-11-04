@@ -117,6 +117,20 @@ def test_logic_template_echo_is_not_an_answer():
     assert get_checker("logic")(echo, e["answer"], meta) == 0.0
 
 
+@pytest.mark.parametrize("n", [3, 4])
+def test_logic_hard_more_people(n):
+    import reasoning_gym as rg
+    e = rg.create_dataset("knights_knaves", size=1, seed=7, n_people=n)[0]
+    meta, md = json.dumps(e, default=str), e["metadata"]
+    t = md["knight_knave_terms"]
+    sol = [t["knight"] if s else t["knave"] for s in md["solution"]]
+    check = get_checker("logic_hard")
+    assert check(tag(e["answer"]), e["answer"], meta) == 1.0
+    sol[0] = t["knave"] if sol[0] == t["knight"] else t["knight"]       # one person wrong: no credit
+    wrong = ", ".join(f"{name} is a {r}" for name, r in zip(md["names"], sol))
+    assert check(tag(wrong), e["answer"], meta) == 0.0
+
+
 def test_logic_uses_last_claim():
     e, meta = kk()
     md = e["metadata"]

@@ -2,6 +2,8 @@
 
 Splits are built once and then always read from the cache, so every model is
 scored on exactly the same questions. Delete data/<task>/ to rebuild.
+Other train files (e.g. data/<task>/train_filtered.jsonl from src.data.filter) are read
+when the task config sets `train_split`; test.jsonl is never touched by them.
 """
 import json
 import random
@@ -107,13 +109,17 @@ def build_splits(task: str, force: bool = False) -> None:
 
 
 def load_split(task: str, split: str, n: int | None = None) -> list[dict]:
-    build_splits(task)
-    rows = _read(DATA_DIR / task / f"{split}.jsonl")
+    path = DATA_DIR / task / f"{split}.jsonl"
+    if split in ("train", "test"):
+        build_splits(task)
+    elif not path.exists():
+        raise FileNotFoundError(f"{path} not found. Make it with: python -m src.data.filter --task {task}")
+    rows = _read(path)
     return rows[:n] if n else rows
 
 
-def to_grpo_dataset(rows: list[dict]) -> Dataset:
-    return Dataset.from_list([{**r, "prompt": build_messages(r["question"])} for r in rows])
+def to_grpo_dataset(rows: list[dict], style: str | None = None) -> Dataset:
+    return Dataset.from_list([{**r, "prompt": build_messages(r["question"], r["task"], style)} for r in rows])
 
 
 if __name__ == "__main__":

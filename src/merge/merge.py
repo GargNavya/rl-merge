@@ -26,7 +26,7 @@ from huggingface_hub import snapshot_download
 from safetensors import safe_open
 from safetensors.torch import save_file
 
-from src.utils.config import TASKS, load_config, merge_name, merged_dir, spec_dir
+from src.utils.config import MERGE_TASKS, load_config, merge_name, merged_dir, spec_dir
 from src.utils.tracking import git_commit, now, write_json
 
 
@@ -108,7 +108,8 @@ def main():
     p.add_argument("--density", type=float, default=0.2, help="TIES: fraction of values kept")
     p.add_argument("--run", default=None, help="default: run in configs/base.yaml")
     p.add_argument("--seed", type=int, default=None, help="training seed; default: seed in base.yaml")
-    p.add_argument("--tasks", nargs="+", default=TASKS, help="specialists to merge (when --specialists not given)")
+    p.add_argument("--tasks", nargs="+", default=MERGE_TASKS,
+                   help="specialists to merge when --specialists is not given (default: merge_tasks in base.yaml)")
     p.add_argument("--specialists", nargs="+", default=None, help="explicit .../merged folders")
     p.add_argument("--out", default=None, help="explicit output folder")
     a = p.parse_args()

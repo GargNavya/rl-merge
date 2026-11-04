@@ -7,7 +7,8 @@ cd "$(dirname "$0")/.."
 BASE=${BASE:-$(python -c "from src.utils.config import load_config; print(load_config()['model']['name'])")}
 RUN=${RUN:-$(python -m src.utils.config run)}
 SEED=${SEED:-$(python -m src.utils.config seed)}
-TASKS=${TASKS:-$(python -c "from src.utils.config import TASKS; print(' '.join(TASKS))")}
+TASKS=${TASKS:-$(python -c "from src.utils.config import MERGE_TASKS; print(' '.join(MERGE_TASKS))")}
+EVAL_TASKS=${EVAL_TASKS:-$(python -c "from src.utils.config import TASKS; print(' '.join(TASKS))")}
 METHODS=${METHODS:-"avg task_arithmetic ties"}
 LAM=${LAM:-1.0}
 DENSITY=${DENSITY:-0.2}
@@ -18,7 +19,7 @@ for m in $METHODS; do
   python -m src.merge.merge --base "$BASE" --method "$m" --lam "$LAM" --density "$DENSITY" \
       --run "$RUN" --seed "$SEED" --tasks $TASKS
   python -m src.eval.evaluate --model "$(python -m src.utils.config merged "$name" --seed "$SEED" --run "$RUN")" \
-      --label "merge-$name" --run "$RUN" --train-seed "$SEED"
+      --label "merge-$name" --run "$RUN" --train-seed "$SEED" --tasks $EVAL_TASKS
   LABELS+=("merge-$name")
 done
 

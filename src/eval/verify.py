@@ -116,13 +116,13 @@ def verify_eval(model_path, task, n):
     qs = [r["question"] for r in load_split(task, "test", n)]
     bs, mx = cfg["eval"]["batch_size"], cfg["eval"]["max_new_tokens"]
 
-    a = generate(model, tok, qs, bs, mx)
-    b = generate(model, tok, qs, bs, mx)
+    a = generate(model, tok, qs, bs, mx, task)   # prompt_style from configs/base.yaml
+    b = generate(model, tok, qs, bs, mx, task)
     same = sum(x == y for x, y in zip(a, b))
     report(same == len(qs), f"same settings twice -> identical replies: {same}/{len(qs)}")
 
     k = min(8, len(qs))
-    c = generate(model, tok, qs[:k], 1, mx)
+    c = generate(model, tok, qs[:k], 1, mx, task)
     agree = sum(x == y for x, y in zip(a[:k], c))
     report(True, f"batch {bs} vs batch 1 identical replies: {agree}/{k} "
                  "(small differences are normal: padding changes GPU arithmetic slightly)", info=True)

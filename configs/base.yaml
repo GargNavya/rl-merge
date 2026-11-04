@@ -1,7 +1,11 @@
 # Shared settings for every specialist. Task files override only what they must.
 seed: 42
-run: v1                  # names the folders of this setup: checkpoints/{specialists,merged}/<run>/, results/<run>/
-                         # change it (v2, ...) whenever training setup changes, so nothing is overwritten
+run: v2                  # names the folders of this setup: checkpoints/{specialists,merged}/<run>/, results/<run>/
+                         # change it (v3, ...) whenever training setup changes, so nothing is overwritten
+                         # v1 = 1.5B, old prompts, 2000 random train questions; tasks gsm8k logic code
+prompt_style: v2         # v1: <answer> tags asked for every task. v2: tags for gsm8k/logic, ```python block for code
+tasks: [gsm8k, logic, logic_hard, code]   # trained and evaluated (train_all.sh, evaluate.py, eval_base.sh)
+merge_tasks: [gsm8k, logic_hard, code]    # merged and scored by RRR (merge.py, rrr.py, merge_and_eval.sh)
 
 model:
   name: Qwen/Qwen2.5-1.5B-Instruct

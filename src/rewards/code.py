@@ -28,6 +28,11 @@ def extract(text: str, meta: str = "") -> str | None:
     return extract_final(text)
 
 
+def has_block(text: str) -> bool:
+    """Format check for code under prompt_style v2: the reply contains a ```python block."""
+    return bool(_BLOCK.search(text or ""))
+
+
 def run_tests(code: str, tests: list[str], setup: str = "", timeout: float = TIMEOUT_S) -> bool:
     program = "\n".join([setup, code, *tests])
     with tempfile.TemporaryDirectory() as d:

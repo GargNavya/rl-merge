@@ -59,8 +59,11 @@ def main():
     model = load_model(cfg["model"]["name"], cfg["model"]["dtype"])
     dtype = pick_dtype(cfg["model"]["dtype"])
 
-    train_ds = to_grpo_dataset(load_split(task, "train"))
-    reward_funcs = make_reward_funcs(task)
+    train_split = cfg["task"].get("train_split", "train")
+    train_ds = to_grpo_dataset(load_split(task, train_split), cfg.get("prompt_style"))
+    reward_funcs = make_reward_funcs(task, cfg.get("prompt_style"))
+    print(f"[train] {task}: {len(train_ds)} questions from data/{task}/{train_split}.jsonl, "
+          f"prompt_style {cfg.get('prompt_style', 'v1')}, run {cfg.get('run')}")
 
     args = GRPOConfig(
         output_dir=str(out / "trainer"),
