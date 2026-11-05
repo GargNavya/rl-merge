@@ -1,0 +1,5 @@
+time,label,model,task,n,accuracy,format_rate,mean_len,seed,git_commit
+2026-11-05T01:52:24,base,Qwen/Qwen2.5-1.5B-Instruct,gsm8k,500,0.644,0.518,239.1,0,4d5b063-dirty
+2026-11-05T02:06:44,base,Qwen/Qwen2.5-1.5B-Instruct,logic,1000,0.3,0.442,328.5,0,4d5b063-dirty
+2026-11-05T02:22:36,base,Qwen/Qwen2.5-1.5B-Instruct,logic_hard,1000,0.154,0.562,412.5,0,4d5b063-dirty
+2026-11-05T02:30:48,base,Qwen/Qwen2.5-1.5B-Instruct,code,499,0.3988,0.992,305.5,0,4d5b063-dirty
