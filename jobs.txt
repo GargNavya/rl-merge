@@ -1,0 +1,5 @@
+# Remote job queue. One job per line:   id | gpus | ref | after | command
+#   gpus: 1 = one GPU, 0 = CPU only.  ref: branch, tag or commit.  after: "-" or job ids that must finish OK first.
+#   Commands run with bash in the repo root. Add "cancel <id>" to stop a job. Never reuse an id.
+# Example:
+# smoke | 1 | navya-1.5B | - | python -m src.train.grpo --task code --out checkpoints/pilot/smoke --set grpo.max_steps=3 grpo.save_steps=100000
