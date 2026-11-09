@@ -1,0 +1,29 @@
+{
+  "task": "logic_hard",
+  "pool": 6000,
+  "kept": 2028,
+  "keep": [
+    1,
+    7
+  ],
+  "n": 8,
+  "histogram_k": {
+    "0": 3972,
+    "1": 1220,
+    "2": 418,
+    "3": 226,
+    "4": 106,
+    "5": 41,
+    "6": 15,
+    "7": 2,
+    "8": 0
+  },
+  "base_mean_pass_rate": 0.07222916666666666,
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "prompt_style": "v2",
+  "temperature": 1.0,
+  "max_new_tokens": 512,
+  "backend": "hf",
+  "git_commit": "4d5b063-dirty",
+  "time": "2026-11-05T01:45:42"
+}
