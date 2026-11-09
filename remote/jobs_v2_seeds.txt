@@ -1,0 +1,23 @@
+# v2 specialists, seeds 43 and 44, on the remote machine. Paste below the header of jobs.txt on branch queue-remote.
+# Code = tag v2-code (the commit v2 seed 42 trained with). Results land in results/v2/seed43/ and seed44/.
+# id | gpus | ref | after | command
+s43-base | 1 | v2-code | - | SEED=43 bash scripts/eval_base.sh
+s43-train-gsm8k | 1 | v2-code | - | python -m src.train.grpo --task gsm8k --seed 43
+s43-train-code | 1 | v2-code | - | python -m src.train.grpo --task code --seed 43
+s43-train-logic_hard | 1 | v2-code | - | python -m src.train.grpo --task logic_hard --seed 43
+s43-train-logic | 1 | v2-code | - | python -m src.train.grpo --task logic --seed 43
+s43-eval-gsm8k | 1 | v2-code | s43-train-gsm8k | python -m src.eval.evaluate --model "$(python -m src.utils.config spec gsm8k --seed 43)/merged" --label spec-gsm8k --train-seed 43
+s43-eval-code | 1 | v2-code | s43-train-code | python -m src.eval.evaluate --model "$(python -m src.utils.config spec code --seed 43)/merged" --label spec-code --train-seed 43
+s43-eval-logic_hard | 1 | v2-code | s43-train-logic_hard | python -m src.eval.evaluate --model "$(python -m src.utils.config spec logic_hard --seed 43)/merged" --label spec-logic_hard --train-seed 43
+s43-eval-logic | 1 | v2-code | s43-train-logic | python -m src.eval.evaluate --model "$(python -m src.utils.config spec logic --seed 43)/merged" --label spec-logic --train-seed 43
+s43-merge | 1 | v2-code | s43-base,s43-eval-gsm8k,s43-eval-code,s43-eval-logic_hard | SEED=43 bash scripts/merge_and_eval.sh
+s44-base | 1 | v2-code | - | SEED=44 bash scripts/eval_base.sh
+s44-train-gsm8k | 1 | v2-code | - | python -m src.train.grpo --task gsm8k --seed 44
+s44-train-code | 1 | v2-code | - | python -m src.train.grpo --task code --seed 44
+s44-train-logic_hard | 1 | v2-code | - | python -m src.train.grpo --task logic_hard --seed 44
+s44-train-logic | 1 | v2-code | - | python -m src.train.grpo --task logic --seed 44
+s44-eval-gsm8k | 1 | v2-code | s44-train-gsm8k | python -m src.eval.evaluate --model "$(python -m src.utils.config spec gsm8k --seed 44)/merged" --label spec-gsm8k --train-seed 44
+s44-eval-code | 1 | v2-code | s44-train-code | python -m src.eval.evaluate --model "$(python -m src.utils.config spec code --seed 44)/merged" --label spec-code --train-seed 44
+s44-eval-logic_hard | 1 | v2-code | s44-train-logic_hard | python -m src.eval.evaluate --model "$(python -m src.utils.config spec logic_hard --seed 44)/merged" --label spec-logic_hard --train-seed 44
+s44-eval-logic | 1 | v2-code | s44-train-logic | python -m src.eval.evaluate --model "$(python -m src.utils.config spec logic --seed 44)/merged" --label spec-logic --train-seed 44
+s44-merge | 1 | v2-code | s44-base,s44-eval-gsm8k,s44-eval-code,s44-eval-logic_hard | SEED=44 bash scripts/merge_and_eval.sh
